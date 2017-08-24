@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,10 +23,11 @@ public class Main {
 	private Robot robot;
 	private Point pos1, pos2;
 	private boolean disabled;
-	private boolean sounds;
+	private static boolean sounds;
 	private JWindow frame;
 	private JWindow frame2;
 	private TrayIcon trayIcon;
+	private ArrayList<Cube> cubes;
 
 	// Alle Monitore
 	// GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()
@@ -34,6 +36,7 @@ public class Main {
 	// MouseInfo.getPointerInfo().getLocation()
 
 	public Main() {
+		cubes = new ArrayList<>();
 		pos1 = new Point();
 		pos2 = new Point();
 		try {
@@ -43,8 +46,11 @@ public class Main {
 		}
 		JPopupMenu jpopup = new JPopupMenu();
 		JMenuItem ext = new JMenuItem("Beenden");
-
+		JMenuItem ext2 = new JMenuItem("Würfel erstellen");
+		JMenuItem ext3 = new JMenuItem("Alle Würfel entfernen");
 		jpopup.add(ext);
+		jpopup.add(ext2);
+		jpopup.add(ext3);
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
@@ -143,6 +149,8 @@ public class Main {
 		try {
 			final PopupMenu popup = new PopupMenu();
 			MenuItem exitItem = new MenuItem("Beenden");
+			MenuItem cubeItem = new MenuItem("Würfel erzeugen");
+			MenuItem delItem = new MenuItem("Alle Würfel entfernen");
 			CheckboxMenuItem soundItem = new CheckboxMenuItem("Sounds", false);
 			soundItem.addItemListener(new ItemListener() {
 
@@ -151,13 +159,20 @@ public class Main {
 					sounds = soundItem.getState();
 				}
 			});
-			popup.add(soundItem);
-			popup.add(exitItem);
-			trayIcon = new TrayIcon(ImageIO.read(getClass().getResource("/icon.png")));
-
 			exitItem.addActionListener(event -> {
 				exit();
 			});
+			cubeItem.addActionListener(event -> {
+				addCube();
+			});
+			delItem.addActionListener(event -> {
+				delCubes();
+			});
+			popup.add(soundItem);
+			popup.add(exitItem);
+			popup.add(cubeItem);
+			popup.add(delItem);
+			trayIcon = new TrayIcon(ImageIO.read(getClass().getResource("/icon.png")));
 
 			trayIcon.setPopupMenu(popup);
 			trayIcon.setImageAutoSize(true);
@@ -172,6 +187,12 @@ public class Main {
 			ext.addActionListener(event -> {
 				exit();
 			});
+			ext2.addActionListener(event -> {
+				addCube();
+			});
+			ext3.addActionListener(event -> {
+				delCubes();
+			});
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -181,15 +202,28 @@ public class Main {
 
 	}
 
+	private void delCubes() {
+		for (int i = 0; i < cubes.size(); i++) {
+			cubes.get(i).dispose();
+		}
+		cubes.clear();
+	}
+
+	private void addCube() {
+		if (cubes.isEmpty())
+			cubes.add(new Cube(pos1, pos2));
+	}
+
 	private void exit() {
 		trayIcon.displayMessage("Made by Tim Morgner",
 				"Vielen Dank für das Benutzen meiner Software.\nFragen können an @Baspla gestellt werden",
 				TrayIcon.MessageType.NONE);
-		if (sounds) {
 			playsound("goodbye.wav");
-		}
 		frame.setVisible(false);
 		frame2.setVisible(false);
+		for (int i = 0; i < cubes.size(); i++) {
+			cubes.get(i).setVisible(false);
+		}
 		disabled = true;
 		new Timer().schedule(new TimerTask() {
 
@@ -215,18 +249,14 @@ public class Main {
 					if (!justported) {
 						justported = true;
 						robot.mouseMove(pos2.x, pos2.y);
-						if (sounds) {
-							playsound("pop.wav");
-						}
+						playsound("pop.wav");
 					}
 				} else {
 					if (pos.distance(pos2) < MIN_DISTANCE) {
 						if (!justported) {
 							justported = true;
 							robot.mouseMove(pos1.x, pos1.y);
-							if (sounds) {
-								playsound("pop.wav");
-							}
+							playsound("pop.wav");
 						}
 					} else {
 						justported = false;
@@ -236,7 +266,8 @@ public class Main {
 		}).start();
 	}
 
-	private void playsound(String string) {
+	static void playsound(String string) {
+		if(!sounds)return;
 		new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -253,15 +284,15 @@ public class Main {
 
 	public class PortalPane extends JPanel {
 
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 4242L;
 		private BufferedImage img;
 
 		public PortalPane(boolean b) {
 			try {
 				if (b) {
-					img = ImageIO.read(getClass().getResource("/portal.png"));
+					img = ImageIO.read(getClass().getResource("/myportal.png"));
 				} else {
-					img = ImageIO.read(getClass().getResource("/portal2.png"));
+					img = ImageIO.read(getClass().getResource("/myportal2.png"));
 				}
 			} catch (IOException ex) {
 				ex.printStackTrace();
