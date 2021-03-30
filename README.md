@@ -9,3 +9,5 @@
 <li>Enthält das beste aus allen Früchten für deinen Tagesbedarf</li>
 <li>Ärtzte hassen dieses Programm</li>
 </ul>
+
+Dieses Programm wurde noch in meiner Schulzeit erstellt.
